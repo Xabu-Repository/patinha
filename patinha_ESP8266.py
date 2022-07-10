@@ -8,19 +8,22 @@ from time import sleep
 
 # MPU6050 registers
 MPU6050_ADDR = 0x68
+
 MPU6050_ACCEL_XOUT_H = 0x3B
 MPU6050_ACCEL_XOUT_L = 0x3C
 MPU6050_ACCEL_YOUT_H = 0x3D
 MPU6050_ACCEL_YOUT_L = 0x3E
 MPU6050_ACCEL_ZOUT_H = 0x3F
 MPU6050_ACCEL_ZOUT_L = 0x40
-MPU6050_GYRO_XOUT_H = 0x43
-MPU6050_GYRO_XOUT_L = 0x44
-MPU6050_GYRO_YOUT_H = 0x45
-MPU6050_GYRO_YOUT_L = 0x46
-MPU6050_GYRO_ZOUT_H = 0x47
-MPU6050_GYRO_ZOUT_L = 0x48
-MPU6050_PWR_MGMT_1 = 0x6B
+MPU6050_GYRO_XOUT_H  = 0x43
+MPU6050_GYRO_XOUT_L  = 0x44
+MPU6050_GYRO_YOUT_H  = 0x45
+MPU6050_GYRO_YOUT_L  = 0x46
+MPU6050_GYRO_ZOUT_H  = 0x47
+MPU6050_GYRO_ZOUT_L  = 0x48
+MPU6050_PWR_MGMT_1   = 0x6B
+MPU6050_SMPLRT_DIV   = 0x19
+MPU6050_CONFIG       = 0x1A
 
 MPU6050_LSBG = 16384.0 #fatores de conversao para dados lidos
 MPU6050_LSBDS = 131.0
@@ -28,7 +31,9 @@ MPU6050_LSBDS = 131.0
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 def mpu6050_init(i2c):
-    i2c.writeto_mem(MPU6050_ADDR, MPU6050_PWR_MGMT_1, bytes([0]))
+    i2c.writeto_mem(MPU6050_ADDR, MPU6050_PWR_MGMT_1, b'\x00')  # waking up the mpu
+    i2c.writeto_mem(MPU6050_ADDR, MPU6050_SMPLRT_DIV , b'\x07') # setting the sample rate
+    i2c.writeto_mem(MPU6050_ADDR, MPU6050_CONFIG, b'\x00')
 
 
 def combine_register_values(h, l):
@@ -90,8 +95,10 @@ def patinha_Setup():
 def patinha_Loop():
     while True:
       data = listToString( mpu6050_get_accel(i2c) )
+      data += listToString( mpu6050_get_gyro(i2c) )
+      print(data)
       sock.write(data.encode())
-      sleep(1)
+      sleep(0.1)
 
 
 if __name__ == "__main__":
@@ -101,5 +108,7 @@ if __name__ == "__main__":
     patinha_Setup()
     
     patinha_Loop()
+
+
 
 
